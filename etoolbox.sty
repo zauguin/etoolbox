@@ -1308,6 +1308,9 @@
 
 \long\def\etb@ifpatchable#1#2{%
   \endgroup
+  \etb@@ifpatchable{#1}{#2}%
+}
+\long\def\etb@@ifpatchable#1#2{%
   \etb@dbg@init#1%
   \ifundef{#1}
     {\etb@dbg@fail{def}\@secondoftwo}
@@ -1346,16 +1349,32 @@
            \etb@dbg@info{pos}\@firstoftwo}}
        {\etb@dbg@fail{mac}\@secondoftwo}}}
 
+\begingroup
+  \def\etb@tempa#1{%
+    \newrobustcmd{\etb@forward@detokenized}[2]{
+      \begingroup
+        \edef\etb@tempa{\unexpanded{##1}}%
+        \def\etb@tempb####1####2####3####4####5####6####7####8####9{%
+          ##2%
+        }
+        \expandafter\expandafter\expandafter
+      \endgroup
+      \expandafter\etb@tempa\expandafter{\detokenize\expandafter{\etb@tempb#1}}%
+    }%
+  }%
+  \@makeother\#%
+  \expandafter
+\endgroup
+\etb@tempa{{#1}{#2}{#3}{#4}{#5}{#6}{#7}{#8}{#9}}%
+
 % [<prefix>]{<cstoken>}{<search>}{<replace>}{<success>}{<failure>}
 
-\newrobustcmd*{\patchcmd}{%
+\newrobustcmd*{\patchcmd}[4][########1]{%
   \etb@dbg@trce\patchcmd
-  \begingroup
-  \@makeother\#%
-  \etb@patchcmd}
+  \etb@forward@detokenized{\etb@forward@detokenized{\etb@patchcmd{#1}{#2}}{#3}}{#4}}
 
-\newcommand{\etb@patchcmd}[4][########1]{%
-  \etb@ifpatchable#2{#3}
+\newcommand{\etb@patchcmd}[4]{%
+  \etb@@ifpatchable#2{#3}
     {\etb@dbg@succ{ret}%
      \begingroup
      \edef\etb@resrvda{%
